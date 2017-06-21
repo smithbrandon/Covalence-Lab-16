@@ -27,6 +27,10 @@ app.route('/api/chirps')
 
     }).post(function (req, res) {
 
+    }).delete(function(req,res){
+
+    }).put(function(req,res){
+        
     });
 app.listen(3000);
 
