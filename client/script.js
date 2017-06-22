@@ -37,7 +37,15 @@ function chirpBox(obj) {
         var $h1 = $('<p></p>');
         $h1.text(obj[i].message);
         $box.append($h1);
-        $box.append('<div style="clear:both"></div>')
+        $box.append('<div style="clear:both"></div>');
+        var $editbar = $('<div class="editBar"></div>')
+        var $edit = $('<div class="editBtn"></div>');
+        var $del = $('<div class="editBtn"></div>');
+        $edit.append('<i class="fa fa-pencil" aria-hidden="true"></i>');
+        $del.append('<i class="fa fa-trash" aria-hidden="true"></i>');
+        $editbar.append($edit);
+        $editbar.append($del);
+        $box.append($editbar);
         var $btnbar = $('<div class="btnBar"></div>');
         var $comment = $('<div class="comment"></div>');
         var $like = $('<div class="like"></div>');
@@ -60,13 +68,12 @@ function chirpBox(obj) {
 function captureChirp() {
     chirp.message = $('#chirp').val();
     chirp.user = 'Bob';
-    chirp.timestamp = (new Date).toISOString();
 
         $.ajax({
         method: "POST",
-        url: "/api/chirps",
+        url: "/api/chirp",
         contentType: "application/json",
-        dataType: "html",
+        // dataType: "html",
         data: JSON.stringify(chirp)
     }).then(function (success) {
         ref();

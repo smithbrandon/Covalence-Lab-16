@@ -10,64 +10,161 @@ var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 10,
     host: 'localhost',
-    user: 'chirper-admin',
-    password: 'passwordChirper',
+    user: 'admin',
+    password: 'passwordChirp',
     database: 'Chirper'
 });
 
 var clientPath = path.join(__dirname, '..', 'client');
-var dataPath = path.join(__dirname, 'data.json');
-
 app.use(express.static(clientPath));
 app.use(bodyParser.json());
 
 //api routes for get and post
-app.route('/api/chirps')
+app.get('/api/chirps', function (req, res) {
+    getChirps()
+        .then(function (chirps) {
+            res.send(chirps);
+        }, function (err) {
+            console.log(err);
+            res.sendStatus(500);
+        });
+});
+app.route('/api/chirp/:id')
     .get(function (req, res) {
-
-    }).post(function (req, res) {
-
-    }).delete(function(req,res){
-
-    }).put(function(req,res){
-        
+        getChirp(req.params.id)
+            .then(function (chirp) {
+                res.send(chirp);
+            }, function (err) {
+                res.sendStatus(500);
+            });
+    }).delete(function (req, res) {
+        deleteChirp(req.params.id)
+        .then(function(chirp){
+            res.sendStatus(204);
+        },function(err){
+            res.sendStatus(500);
+        })
+    }).put(function (req, res) {
+        updateChirp(req.params.id, req.body.message)
+        .then(function(chirp){
+            res.status(204).send(chirp);
+        },function(err){
+            res.sendStatus(500);
+        });
     });
+
+app.post('/api/chirp/', function (req, res) {
+    insertChirp(req.body.user, req.body.message)
+        .then(function (chirp) {
+            res.status(201).send(chirp);
+        }, function (err) {
+            res.sendStatus(500);
+        });
+});
+
 app.listen(3000);
 
-function getChirp() {
-    return new Promise(function (res, rej) {
-        fs.readFile(filePath, encoding, function (err, data) {
+function getChirps() {
+    return new Promise(function (resolve, reject) {
+        pool.getConnection(function (err, connection) {
             if (err) {
+                console.log(err);
+                connection.release();
                 reject(err);
             } else {
-                res(data);
+                connection.query("CALL GetChirps();", function (err, resultSets) {
+                    if (err) {
+                        console.log(err);
+                        connection.releaase();
+                        reject(err);
+                    } else {
+                        connection.release();
+                        resolve(resultSets[0]);
+                    }
+                });
             }
         });
     });
 }
-function getChirps() {
-    return new Promise(function (res, rej) {
-        fs.writeFile(filePath, data, function (err, data) {
+function getChirp(id) {
+    return new Promise(function (resolve, reject) {
+        pool.getConnection(function (err, connection) {
             if (err) {
-                rej(err);
+                connection.releaase();
+                reject(err);
             } else {
-                res();
+                connection.query("CALL getChirp(?);", [id], function (err, resultSets) {
+                    if (err) {
+                        connection.release();
+                        reject(err);
+                    } else {
+                        connection.release();
+                        resolve(resultSets[0]);
+                    }
+                });
             }
         });
     });
 }
-function insertChirp() {
-    return new Promise(function (res, rej) {
-
+function insertChirp(usr, msg) {
+    return new Promise(function (resolve, reject) {
+        pool.getConnection(function (err, connection) {
+            if (err) {
+                connection.release();
+                reject(err);
+            } else {
+                connection.query("CALL insertChirp(?,?);", [usr, msg], function (err, resultSets) {
+                    if (err) {
+                        connection.release();
+                        reject(err);
+                    } else {
+                        connection.release();
+                        resolve(resultSets[0]);
+                    }
+                })
+            }
+        })
     })
 }
-function updateChirp() {
-    return new Promise(function (res, rej) {
-
+function updateChirp(id, msg) {
+    return new Promise(function (resolve, reject) {
+        pool.getConnection(function(err, connection){
+            console.log(id);
+            console.log(msg);
+            if(err){
+                connection.release();
+                reject(err);
+            }else{
+                connection.query("CALL updateChirp(?,?);",[id,msg],function(err, resultSets){
+                    if(err){
+                        connection.release();
+                        reject(err);
+                    }else{
+                        connection.release();
+                        resolve();
+                    }
+                })
+            }
+        })
     })
 }
-function deleteChirp() {
-    return new Promise(function (res, rej) {
-
+function deleteChirp(id) {
+    return new Promise(function (resolve, reject) {
+        pool.getConnection(function(err, connection){
+            if(err){
+                connection.release();
+                reject(err);
+            }else{
+                connection.query("CALL deleteChirp(?);",[id],function(err, resultSets){
+                    if(err){
+                        connection.release();
+                        reject(err);
+                    }else{
+                        connection.release();
+                        resolve();
+                    }
+                })
+            }
+        })
     })
 }

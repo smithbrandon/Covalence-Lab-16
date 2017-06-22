@@ -40,7 +40,7 @@
         * Should call the procedure to delete an existing chirp
         * Should just respond with code/status 204
 
-## Front-End Modifications
+## Front-End Modifications (Work from here)
 * Add a delete button/icon to each chirp in the list on the page. Clicking the button/icon should delete the chirp from the database and reload the list of chirps
 * At this time, we will not be showing a visual means of viewing a single chirp or updating a chirp
     * Will be added when we get to Angular!
