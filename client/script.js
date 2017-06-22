@@ -16,26 +16,26 @@ function getdate(time) {
     }
 }
 
-function chirpBox(obj) {
-    for (var i = obj.length - 1; i > 0; i--) {
-        var $box = $('<div></div>');
+function createBox(bid){
+    var $box = $('<div></div>');
+        $box.attr('id', bid.id)
         $box.addClass("chirpbox");
         var $img = $('<img/>');
         $img.addClass('chirpedImg');
         $img.attr('src', 'profile.jpg');
         $box.append($img);
         var $h3 = $('<h3></h3>');
-        $h3.text(obj[i].user);
+        $h3.text(bid.user);
         $box.append($h3);
         var $h4 = $('<h4></h4>');
-        $h4.text('@Rosslanding');
+        $h4.text(bid.name);
         var $h42 = $('<span></span>');
         $h42.addClass('time');
-        $h42.text(getdate(obj[i].timestamp));
+        $h42.text(getdate(bid.timestamp));
         $box.append($h4);
         $box.append($h42);
         var $h1 = $('<p></p>');
-        $h1.text(obj[i].message);
+        $h1.text(bid.message);
         $box.append($h1);
         $box.append('<div style="clear:both"></div>');
         var $editbar = $('<div class="editBar"></div>')
@@ -61,17 +61,34 @@ function chirpBox(obj) {
         $comment.append(Math.floor(Math.random() * 1000));
         $box.append($btnbar);
         $('#chirpList').append($box);
-
-    }
-
+        $del.click(function(){
+            deleteChirp($box.attr('id'));
+        });
 }
+function chirpBox(obj) {
+    for (var i = obj.length - 1; i > 0; i--) {
+        createBox(obj[i]);
+    }
+}
+
+function deleteChirp(id){
+    $.ajax({
+        method: "DELETE",
+        url: "/api/chirps/" + id
+    }).then(function(success){
+        ref();
+    },function(err){
+        console.log(err);
+    })
+}
+
 function captureChirp() {
     chirp.message = $('#chirp').val();
-    chirp.user = 'Bob';
-
+    chirp.user = parseInt($('#users').val());
+    console.log($('#users').val());
         $.ajax({
         method: "POST",
-        url: "/api/chirp",
+        url: "/api/chirps",
         contentType: "application/json",
         // dataType: "html",
         data: JSON.stringify(chirp)
@@ -102,6 +119,21 @@ function checkMsg() {
         $('#chirp-btn').prop('disabled', true)
     }
 }
+function setDD(){
+    $.ajax({
+        method: "GET",
+        url: '/api/users'
+    }).then(function(users){
+        console.log(users[0].name);
+        for (var i =0; i< users.length; i++){
+            var opt = $('<option value="' + users[i].id + '"></option"');
+            opt.text(users[i].name);
+            $('#users').append(opt);
+        }
+    }, function(err){
+        console.log(err);
+    })
+}
 
 function ref() {
     $.ajax({
@@ -117,4 +149,5 @@ function ref() {
 $(document).ready(function () {
     checkMsg();
     ref();
+    setDD();
 })

@@ -10,8 +10,8 @@ var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 10,
     host: 'localhost',
-    user: 'admin',
-    password: 'passwordChirp',
+    user: 'chirper-admin',
+    password: 'passwordChirper',
     database: 'Chirper'
 });
 
@@ -20,6 +20,15 @@ app.use(express.static(clientPath));
 app.use(bodyParser.json());
 
 //api routes for get and post
+app.get('/api/users',function(req, res){
+    getUsers()
+    .then(function(users){
+        res.send(users);
+    },function(err){
+        console.log(err);
+        res.sendStatus(500);
+    })
+});
 app.get('/api/chirps', function (req, res) {
     getChirps()
         .then(function (chirps) {
@@ -29,7 +38,7 @@ app.get('/api/chirps', function (req, res) {
             res.sendStatus(500);
         });
 });
-app.route('/api/chirp/:id')
+app.route('/api/chirps/:id')
     .get(function (req, res) {
         getChirp(req.params.id)
             .then(function (chirp) {
@@ -53,11 +62,12 @@ app.route('/api/chirp/:id')
         });
     });
 
-app.post('/api/chirp/', function (req, res) {
+app.post('/api/chirps/', function (req, res) {
     insertChirp(req.body.user, req.body.message)
         .then(function (chirp) {
             res.status(201).send(chirp);
         }, function (err) {
+            console.log(err);
             res.sendStatus(500);
         });
 });
@@ -75,7 +85,7 @@ function getChirps() {
                 connection.query("CALL GetChirps();", function (err, resultSets) {
                     if (err) {
                         console.log(err);
-                        connection.releaase();
+                        connection.release();
                         reject(err);
                     } else {
                         connection.release();
@@ -90,7 +100,7 @@ function getChirp(id) {
     return new Promise(function (resolve, reject) {
         pool.getConnection(function (err, connection) {
             if (err) {
-                connection.releaase();
+                connection.release();
                 reject(err);
             } else {
                 connection.query("CALL getChirp(?);", [id], function (err, resultSets) {
@@ -111,12 +121,12 @@ function insertChirp(usr, msg) {
         pool.getConnection(function (err, connection) {
             if (err) {
                 connection.release();
-                reject(err);
+                reject('first error: ' + err);
             } else {
                 connection.query("CALL insertChirp(?,?);", [usr, msg], function (err, resultSets) {
                     if (err) {
                         connection.release();
-                        reject(err);
+                        reject('second error: ' + err);
                     } else {
                         connection.release();
                         resolve(resultSets[0]);
@@ -167,4 +177,24 @@ function deleteChirp(id) {
             }
         })
     })
+}
+function getUsers(){
+    return new Promise(function(resolve, reject){
+        pool.getConnection(function(err, connection){
+            if(err){
+                connection.release();
+                reject(err);
+            }else{
+                connection.query("CALL getUsers()", function(err,resultSets){
+                    if(err){
+                        connection.release();
+                        reject(err);
+                    }else{
+                        connection.release();
+                        resolve(resultSets[0]);
+                    }
+                });
+            }
+        });
+    });
 }
