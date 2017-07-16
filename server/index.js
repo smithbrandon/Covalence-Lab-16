@@ -72,7 +72,7 @@ app.post('/api/chirps/', function (req, res) {
         });
 });
 
-app.listen(3000);
+app.listen(process.env.PORT, process.env.IP);
 
 function getChirps() {
     return new Promise(function (resolve, reject) {
